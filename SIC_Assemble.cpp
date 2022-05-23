@@ -1,6 +1,7 @@
 #include <iostream>
-#include <vector>
 #include <fstream>
+#include <cstdlib>
+#include <vector>
 #include <string>
 
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
@@ -16,7 +17,15 @@ private:
 public:
     void load_data(void)
     {
-        cout << "load_data" << endl;
+        source.open(SOURCE_PATH,ios::in);
+        if(source.is_open()){
+            string line;
+            while (getline(source,line))
+            {
+                cout<<line<<endl;
+            }
+            
+        }
     }
 };
 
