@@ -6,8 +6,18 @@
 
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
 #define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
-
 using namespace std;
+void print_ascii(string _line)
+{
+    for (size_t i = 0; i < _line.size(); i++)
+    {
+
+        int int_char = _line.at(i);
+        cout << i << ":" << int_char << " ";
+    }
+    cout << endl;
+}
+
 class file_operate
 {
 private:
@@ -24,6 +34,7 @@ public:
             while (getline(file, line))
             {
                 cout << line << endl;
+                print_ascii(line);
             }
         }
     }
@@ -44,6 +55,7 @@ public:
             while (getline(source, line))
             {
                 cout << line << endl;
+                print_ascii(line);
             }
         }
         else
@@ -68,6 +80,7 @@ public:
             while (getline(opcode, line))
             {
                 cout << line << endl;
+                print_ascii(line);
             }
         }
         else
@@ -84,6 +97,6 @@ int main()
     source.load_data();
     cout << "------" << endl;
     opcode_file opcode;
-    opcode.load_data();
+    // opcode.load_data();
     cout << "--End--" << endl;
 }
