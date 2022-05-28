@@ -86,10 +86,36 @@ private:
     vector<string> col_3;
 
 public:
+    void print_all_col(void)
+    {
+        for (int i = 0; i < col_1.size(); i++)
+        {
+            cout << i << "\t";
+            cout << col_1[i] << "\t";
+            cout << col_2[i] << "\t";
+            cout << col_3[i] << endl;
+        }
+    }
     void fetch_data(int _col_number, string _message)
     {
         cout << "[" << _col_number << "]"
              << "message:" << _message << endl;
+        switch (_col_number)
+        {
+        case 1:
+            col_1.push_back(_message);
+            break;
+        case 2:
+            col_2.push_back(_message);
+            break;
+        case 3:
+            col_3.push_back(_message);
+            break;
+
+        default:
+            cout << "ERROR:here is no define col: " << _col_number << endl;
+            break;
+        }
     }
 
     void load_data(void)
@@ -124,6 +150,11 @@ public:
 
                         fetch_data(col_selector, temp_string);
                         temp_string = "";
+                        if (col_selector == 2 && i == line.size() - 1)
+                        {
+                            cout << "here need send message " << endl;
+                            fetch_data(++col_selector, temp_string);
+                        }
                         if (col_selector > code_max_col || type == 'r') //如果超過第4欄（0,1,2,3） 或遇到換行
                         {
                             // cout << "reset col_selector:" << type << " at " << i << endl;
@@ -184,6 +215,7 @@ int main()
     source_file source;
     source.load_data();
     cout << "------" << endl;
+    source.print_all_col();
     opcode_file opcode;
     // opcode.load_data();
     cout << "--End--" << endl;
