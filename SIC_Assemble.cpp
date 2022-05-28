@@ -6,6 +6,9 @@
 
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
 #define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
+
+#define code_max_col 3 // 0,1,2,3 總共有4欄
+#define loc_col 0      // location counter 定義在0
 using namespace std;
 void print_ascii(string _line)
 {
@@ -15,37 +18,38 @@ void print_ascii(string _line)
         int int_char = _line.at(i);
         cout << i << ":" << int_char << " ";
     }
-    cout << endl;
+    cout << "  "
+         << "size = " << _line.size() << endl;
 }
 char char_type(int c_ascii)
 {                                       //判斷有幾種ascii類型 有無文字 或空白
     if (c_ascii >= 65 && c_ascii <= 90) // A~Z 大寫
     {
-        return 'a'; //alphabet
+        return 'a'; // alphabet
     }
     else if (c_ascii >= 48 && c_ascii <= 57)
     {
-        return 'n'; //number
+        return 'n'; // number
     }
     else if (c_ascii == 9)
     {
-        return 't'; //tab
+        return 't'; // tab
     }
     else if (c_ascii == 13)
     {
-        return 'r'; //return (CR)
+        return 'r'; // return (CR)
     }
     else if (c_ascii == 32)
     {
-        return 's'; //space
+        return 's'; // space
     }
-    else if (c_ascii == 39 || c_ascii== 44)
+    else if (c_ascii == 39 || c_ascii == 44)
     {
-        return 'm'; //Mark "'" "?"
+        return 'm'; // Mark "'" "?"
     }
     else
     {
-        cout<<"ERROR!! 有ascii沒被定義 請查看 char_type() 內容"<<endl;
+        cout << "ERROR!! 有ascii沒被定義 請查看 char_type() 內容" << endl;
         return '?';
     }
 }
@@ -76,11 +80,18 @@ class source_file
 {
 private:
     fstream source;
+    vector<int> Loc;
     vector<string> col_1;
     vector<string> col_2;
     vector<string> col_3;
 
 public:
+    void fetch_data(int _col_number, string _message)
+    {
+        cout << "[" << _col_number << "]"
+             << "message:" << _message << endl;
+    }
+
     void load_data(void)
     {
         source.open(SOURCE_PATH, ios::in);
@@ -94,19 +105,41 @@ public:
                 cout << line << endl;
                 print_ascii(line);
                 cout << endl;
+                string temp_string = "";
+                int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
                 {
                     int split_char_ascii = (int)line.at(i);
                     char type = char_type(split_char_ascii);
-                    cout << type;
-                    if (type == '?')
+
+                    if (type == 'a' || type == 'n' || type == 'm') // 如果遇到文字、數字、符號 添加字元到暫存string
                     {
-                        cout << line.at(i) << "|" << split_char_ascii << endl;
+                        temp_string.push_back(line.at(i));
+                        // cout << type << " " << line.at(i) << "|" << temp_string << endl;
+                    }
+                    else if (type == 's' || type == 't' || type == 'r' || i == line.size() - 1) //如果遇到空白 移動 或最後一個字元
+                    {
+                        col_selector++;
+                        // cout << type << ": to col " << col_selector << endl;
+
+                        fetch_data(col_selector, temp_string);
+                        temp_string = "";
+                        if (col_selector > code_max_col || type == 'r') //如果超過第4欄（0,1,2,3） 或遇到換行
+                        {
+                            // cout << "reset col_selector:" << type << " at " << i << endl;
+                            col_selector = 1;
+                        }
                     }
                     else
                     {
-                        cout << endl;
+                        cout << "out control: " << type << endl;
                     }
+                }
+                if (temp_string != "")
+                {
+                    fetch_data(++col_selector, temp_string);
+                    col_selector = 0;
+                    temp_string = "";
                 }
 
                 cout << row_num << "------" << endl;
