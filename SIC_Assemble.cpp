@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <sstream>
 
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
 #define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
@@ -54,6 +55,23 @@ char char_type(int c_ascii)
     }
 }
 
+string dec_to_hex(int _dec_value)
+{
+    stringstream ss;
+    ss << hex << _dec_value; // int decimal_value
+    string res(ss.str());
+    return res;
+}
+
+int hex_to_dec(string _hex_value)
+{
+    int dec_value;
+    stringstream ss;
+    ss << _hex_value;       // std::string hex_value
+    ss >> hex >> dec_value; // int decimal_value
+    return dec_value;
+}
+
 class file_operate
 {
 private:
@@ -95,6 +113,12 @@ public:
             cout << col_2[i] << "\t";
             cout << col_3[i] << endl;
         }
+    }
+    int location_count(int start_num, int add_num)
+    {
+        static int hex_num = 0;
+        hex_num++;
+        return hex_num;
     }
     void fetch_data(int _col_number, string _message)
     {
@@ -213,9 +237,11 @@ int main()
 {
     cout << "--start--" << endl;
     source_file source;
-    source.load_data();
+    // source.load_data();
+    cout << hex_to_dec("1000") << endl;
     cout << "------" << endl;
-    source.print_all_col();
+    cout << dec_to_hex(10) << endl;
+    // source.print_all_col();
     opcode_file opcode;
     // opcode.load_data();
     cout << "--End--" << endl;
