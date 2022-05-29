@@ -114,12 +114,15 @@ public:
             cout << col_3[i] << endl;
         }
     }
-    int location_count(int start_num, int add_num)
+    string location_count(string start_hex, int add_num)
     {
-        static int hex_num = 0;
-        hex_num++;
+        static string hex_num = start_hex;
+        int dec_num = hex_to_dec(hex_num);
+        dec_num = dec_num + add_num;
+        hex_num = dec_to_hex(dec_num);
         return hex_num;
     }
+
     void fetch_data(int _col_number, string _message)
     {
         cout << "[" << _col_number << "]"
@@ -238,9 +241,12 @@ int main()
     cout << "--start--" << endl;
     source_file source;
     // source.load_data();
-    cout << hex_to_dec("1000") << endl;
+    for (size_t i = 0; i < 10; i++)
+    {
+        cout << source.location_count("1000", 3) << endl;
+    }
+
     cout << "------" << endl;
-    cout << dec_to_hex(10) << endl;
     // source.print_all_col();
     opcode_file opcode;
     // opcode.load_data();
