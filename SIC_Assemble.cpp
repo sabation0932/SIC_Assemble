@@ -60,6 +60,7 @@ string dec_to_hex(int _dec_value)
     stringstream ss;
     ss << hex << _dec_value; // int decimal_value
     string res(ss.str());
+    // cout << "dec = " << _dec_value << " hex = " << res << endl;
     return res;
 }
 
@@ -69,6 +70,7 @@ int hex_to_dec(string _hex_value)
     stringstream ss;
     ss << _hex_value;       // std::string hex_value
     ss >> hex >> dec_value; // int decimal_value
+    // cout << "hex = " << _hex_value << " dec = " << dec_value << endl;
     return dec_value;
 }
 
@@ -98,10 +100,11 @@ class source_file
 {
 private:
     fstream source;
-    vector<int> Loc;
+    vector<string> Loc;
     vector<string> col_1;
     vector<string> col_2;
     vector<string> col_3;
+    string start_num;
 
 public:
     void print_all_col(void)
@@ -112,6 +115,14 @@ public:
             cout << col_1[i] << "\t";
             cout << col_2[i] << "\t";
             cout << col_3[i] << endl;
+        }
+    }
+    void print_loc(void)
+    {
+        for (int i = 0; i < Loc.size(); i++)
+        {
+            cout << i << "\t";
+            cout << Loc[i] << endl;
         }
     }
     string loc_counter(string _start_hex, int add_num)
@@ -131,7 +142,7 @@ public:
         if (_message.find("EOF") != std::string::npos) // 如果是EOF size = 3
         {
             size = 3;
-            cout << "here is EOF size = "<<size << endl;
+            cout << "here is EOF size = " << size << endl;
             return size; //"EOF佔3個BYTE"
         }
         for (int i = 0; i < _message.size(); i++)
@@ -155,19 +166,32 @@ public:
 
     void loc_count_fetch()
     {
+        static bool start_is_find = false;
+        static string start_num;
         for (size_t i = 0; i < col_1.size(); i++)
         {
-            if (col_2[i] == "BYTE") //找到BYTE
+            if (col_2[i] == "START")
             {
+                start_is_find = true;
+                start_num = col_3[i];
+            }
+
+            else if (col_2[i] == "BYTE") //找到BYTE
+            {
+                if (start_is_find == false)
+                {
+                    cout << "lose \"START\" position please check the source file(.txt)" << endl;
+                    return exit(0);
+                }
                 // location counter + BYTE大小
-                cout << "find BYTE at " << i << endl;
+                // cout << "find BYTE at " << i << endl;
                 string temp = col_3[i];
-                find_BYTE_size(temp);
-                
+                int size = find_BYTE_size(temp);
+                Loc.push_back(loc_counter(start_num, size));
             }
             else
             {
-                // location counter + 3
+                Loc.push_back(loc_counter(start_num, 3));
             }
         }
     }
@@ -293,6 +317,8 @@ int main()
     source.print_all_col();
     cout << "--loc-count--" << endl;
     source.loc_count_fetch();
+    source.print_loc();
+
     opcode_file opcode;
     // opcode.load_data();
     cout << "--End--" << endl;
