@@ -114,19 +114,67 @@ public:
             cout << col_3[i] << endl;
         }
     }
-    string location_count(string start_hex, int add_num)
+    string loc_counter(string _start_hex, int add_num)
     {
+        static string start_hex = _start_hex;
         static string hex_num = start_hex;
         int dec_num = hex_to_dec(hex_num);
         dec_num = dec_num + add_num;
         hex_num = dec_to_hex(dec_num);
         return hex_num;
     }
+    int find_BYTE_size(string _message)
+    {
+        // string find ' position in string
+        int size = 0;
+        bool open_flag = false;
+        if (_message.find("EOF") != std::string::npos) // 如果是EOF size = 3
+        {
+            size = 3;
+            cout << "here is EOF size = "<<size << endl;
+            return size; //"EOF佔3個BYTE"
+        }
+        for (int i = 0; i < _message.size(); i++)
+        {
+            if (_message.at(i) == '\'')
+            {
+                cout << "find ' at " << i << endl;
+                open_flag = !open_flag; //反轉狀態
+            }
+            if (open_flag == true)
+            {
+                size++;
+            }
+        }
+        size = size - 1; //第一個 ' 會算進去 要扣掉;
+        size = size / 2; //兩個16進位 組成一個BYTE
+        cout << "size is " << size << endl;
+
+        return size;
+    }
+
+    void loc_count_fetch()
+    {
+        for (size_t i = 0; i < col_1.size(); i++)
+        {
+            if (col_2[i] == "BYTE") //找到BYTE
+            {
+                // location counter + BYTE大小
+                cout << "find BYTE at " << i << endl;
+                string temp = col_3[i];
+                find_BYTE_size(temp);
+                
+            }
+            else
+            {
+                // location counter + 3
+            }
+        }
+    }
 
     void fetch_data(int _col_number, string _message)
     {
-        cout << "[" << _col_number << "]"
-             << "message:" << _message << endl;
+        // cout << "[" << _col_number << "]"<< "message:" << _message << endl;
         switch (_col_number)
         {
         case 1:
@@ -155,9 +203,9 @@ public:
             while (getline(source, line))
             {
 
-                cout << line << endl;
-                print_ascii(line);
-                cout << endl;
+                // cout << line << endl;
+                // print_ascii(line);
+                // cout << endl;
                 string temp_string = "";
                 int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
@@ -179,7 +227,7 @@ public:
                         temp_string = "";
                         if (col_selector == 2 && i == line.size() - 1)
                         {
-                            cout << "here need send message " << endl;
+                            // cout << "here need send message " << endl;
                             fetch_data(++col_selector, temp_string);
                         }
                         if (col_selector > code_max_col || type == 'r') //如果超過第4欄（0,1,2,3） 或遇到換行
@@ -200,7 +248,7 @@ public:
                     temp_string = "";
                 }
 
-                cout << row_num << "------" << endl;
+                // cout << row_num << "------" << endl;
                 row_num++;
             }
         }
@@ -240,14 +288,11 @@ int main()
 {
     cout << "--start--" << endl;
     source_file source;
-    // source.load_data();
-    for (size_t i = 0; i < 10; i++)
-    {
-        cout << source.location_count("1000", 3) << endl;
-    }
-
+    source.load_data();
     cout << "------" << endl;
-    // source.print_all_col();
+    source.print_all_col();
+    cout << "--loc-count--" << endl;
+    source.loc_count_fetch();
     opcode_file opcode;
     // opcode.load_data();
     cout << "--End--" << endl;
