@@ -104,9 +104,11 @@ private:
     vector<string> col_1;
     vector<string> col_2;
     vector<string> col_3;
-    string start_num;
 
 public:
+    vector<string> label_name;
+    vector<string> label_address;
+
     void print_all_col(void)
     {
         for (int i = 0; i < col_1.size(); i++)
@@ -290,12 +292,35 @@ public:
             cout << "here is no source file" << endl;
         }
     }
+
+    void print_symbol_table()
+    {
+        for (size_t i = 0; i < label_name.size(); i++)
+        {
+            cout << label_name[i] << "\t" << label_address[i] << endl;
+        }
+    }
+
+    void symbol_table()
+    {
+        for (size_t i = 0; i < col_1.size(); i++)
+        {
+            if (col_1[i] != "" && i != 0)
+            {
+                // cout << col_1[i] << " \t " << Loc[i] << endl;
+                label_name.push_back(col_1[i]);
+                label_address.push_back(Loc[i]);
+            }
+        }
+    }
 };
 
 class opcode_file
 {
 private:
     fstream opcode;
+    vector<string> label_name;
+    vector<string> address;
 
 public:
     void load_data(void)
@@ -304,15 +329,63 @@ public:
         if (opcode.is_open())
         {
             string line;
+            int row_num = 0;
             while (getline(opcode, line))
             {
-                cout << line << endl;
-                print_ascii(line);
+                string temp_string = "";
+                int col_selector = 0;
+
+                for (size_t i = 0; i < line.size(); i++)
+                {
+                    int split_char_ascii = (int)line.at(i);
+                    char type = char_type(split_char_ascii);
+                    if (type != 's')
+                    {
+                        temp_string.push_back(line.at(i));
+                    }
+                    else if (type == 's' || type == 'r')
+                    {
+                        //遇到空白 發送字串給vector
+                        fetch_data(col_selector, temp_string);
+                        temp_string = "";
+                        col_selector++;
+                    }
+                }
+                if (temp_string != "")
+                {
+                    fetch_data(col_selector, temp_string);
+                    col_selector = 0;
+                    temp_string = "";
+                }
+                row_num++;
             }
         }
         else
         {
             cout << "here is no opcode file" << endl;
+        }
+    }
+    void print_all_col(){
+        for (size_t i = 0; i < label_name.size(); i++)
+        {
+            cout<<i<<" "<<label_name[i]<<"\t"<< address[i]<<endl;
+        }
+        
+    }
+    void fetch_data(int _col_number, string _message)
+    {
+        switch (_col_number)
+        {
+        case 0:
+            label_name.push_back(_message);
+            break;
+        case 1:
+            address.push_back(_message);
+            break;
+
+        default:
+            cout << "ERROR:here is no define col: " << _col_number << " at OPcode" << endl;
+            break;
         }
     }
 };
@@ -325,9 +398,15 @@ int main()
     cout << "------" << endl;
     cout << "--loc-count--" << endl;
     source.loc_count_fetch();
-    source.print_all_col();
+    // source.print_all_col();
+    cout << "---symbol-table--" << endl;
+    source.symbol_table();
+    // source.print_symbol_table();
 
+    cout << "--op-code--" << endl;
     opcode_file opcode;
-    // opcode.load_data();
+    opcode.load_data();
+    opcode.print_all_col();
+    
     cout << "--End--" << endl;
 }
