@@ -112,6 +112,7 @@ public:
         for (int i = 0; i < col_1.size(); i++)
         {
             cout << i << "\t";
+            cout << Loc[i] << "\t";
             cout << col_1[i] << "\t";
             cout << col_2[i] << "\t";
             cout << col_3[i] << endl;
@@ -142,14 +143,14 @@ public:
         if (_message.find("EOF") != std::string::npos) // 如果是EOF size = 3
         {
             size = 3;
-            cout << "here is EOF size = " << size << endl;
+            // cout << "here is EOF size = " << size << endl;
             return size; //"EOF佔3個BYTE"
         }
         for (int i = 0; i < _message.size(); i++)
         {
             if (_message.at(i) == '\'')
             {
-                cout << "find ' at " << i << endl;
+                // cout << "find ' at " << i << endl;
                 open_flag = !open_flag; //反轉狀態
             }
             if (open_flag == true)
@@ -159,7 +160,7 @@ public:
         }
         size = size - 1; //第一個 ' 會算進去 要扣掉;
         size = size / 2; //兩個16進位 組成一個BYTE
-        cout << "size is " << size << endl;
+        // cout << "size is " << size << endl;
 
         return size;
     }
@@ -168,17 +169,19 @@ public:
     {
         static bool start_is_find = false;
         static string start_num;
-        for (size_t i = 0; i < col_1.size(); i++)
+        for (size_t i = 0; i < col_1.size(); i++) //讀取整裡過後的 Source Statement
         {
             if (col_2[i] == "START")
             {
                 start_is_find = true;
                 start_num = col_3[i];
+                Loc.push_back(loc_counter(start_num, 0)); // START 那一行
+                Loc.push_back(loc_counter(start_num, 0)); // START  的後一行 範例是 FIRST
             }
 
             else if (col_2[i] == "BYTE") //找到BYTE
             {
-                if (start_is_find == false)
+                if (start_is_find == false) //在找到BYTE 前沒有找到 START 則失敗，意味需要以START作為開頭。
                 {
                     cout << "lose \"START\" position please check the source file(.txt)" << endl;
                     return exit(0);
@@ -314,10 +317,9 @@ int main()
     source_file source;
     source.load_data();
     cout << "------" << endl;
-    source.print_all_col();
     cout << "--loc-count--" << endl;
     source.loc_count_fetch();
-    source.print_loc();
+    source.print_all_col();
 
     opcode_file opcode;
     // opcode.load_data();
