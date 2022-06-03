@@ -192,6 +192,12 @@ public:
                 int size = find_BYTE_size(temp);
                 Loc.push_back(loc_counter(start_num, size));
             }
+            else if (col_2[i] == "RESB")
+            {
+                cout << "find RESB at " << i << endl;
+                Loc.push_back(loc_counter(start_num, atoi(col_3[i].c_str())));
+            }
+
             else
             {
                 Loc.push_back(loc_counter(start_num, 3));
