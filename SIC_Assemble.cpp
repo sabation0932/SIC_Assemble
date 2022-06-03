@@ -389,6 +389,9 @@ public:
         }
     }
 };
+void count_objectcode(source_file _source, opcode_file _opcode){
+    cout<<"Hello Wolrd"<<endl;
+}
 
 int main()
 {
@@ -406,7 +409,7 @@ int main()
     cout << "--op-code--" << endl;
     opcode_file opcode;
     opcode.load_data();
-    opcode.print_all_col();
-    
+    // opcode.print_all_col();
+    cout<< "--count-object-code"<<endl;
     cout << "--End--" << endl;
 }
