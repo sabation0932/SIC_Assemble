@@ -98,16 +98,29 @@ public:
 
 class source_file
 {
-private:
+public:
     fstream source;
     vector<string> Loc;
     vector<string> col_1;
     vector<string> col_2;
     vector<string> col_3;
 
-public:
     vector<string> label_name;
     vector<string> label_address;
+
+    string the_loc_of(string _label)
+    {
+        for (size_t i = 0; i < label_name.size(); i++)
+        {
+            if (label_name[i] == _label)
+            {
+                cout << "label: " << label_name[i] << " -> " << label_address[i] << endl;
+                return label_address[i];
+            }
+        }
+        cout << "here is no label " << _label << "please check symbol table" << endl;
+        return "";
+    };
 
     void print_all_col(void)
     {
@@ -317,12 +330,25 @@ public:
 
 class opcode_file
 {
-private:
+public:
     fstream opcode;
     vector<string> label_name;
     vector<string> address;
 
-public:
+    string the_address_of(string _statement)
+    { //輸入OPCODE 返還 address
+        for (size_t i = 0; i < label_name.size(); i++)
+        {
+            if (label_name[i] == _statement)
+            {
+                cout << "op_code: " << label_name[i] << " -> " << address[i] << endl;
+                return address[i];
+            }
+        }
+        cout << "here is wrong op_code: " << _statement << " please check source file(.txt)" << endl;
+        return "";
+    }
+
     void load_data(void)
     {
         opcode.open(OPCODE_PATH, ios::in);
@@ -365,12 +391,12 @@ public:
             cout << "here is no opcode file" << endl;
         }
     }
-    void print_all_col(){
+    void print_all_col()
+    {
         for (size_t i = 0; i < label_name.size(); i++)
         {
-            cout<<i<<" "<<label_name[i]<<"\t"<< address[i]<<endl;
+            cout << i << " " << label_name[i] << "\t" << address[i] << endl;
         }
-        
     }
     void fetch_data(int _col_number, string _message)
     {
@@ -389,9 +415,32 @@ public:
         }
     }
 };
-void count_objectcode(source_file _source, opcode_file _opcode){
-    cout<<"Hello Wolrd"<<endl;
-}
+class object_code : public source_file, public opcode_file //繼承自source,opcode
+{
+public:
+    vector<string> Obj_code;
+    void generate(source_file &_source, opcode_file &_opcode) //生成object_code
+    {
+        for (size_t i = 0; i < _source.col_2.size(); i++)
+        {
+            if (_source.col_2[i] == "START")i++;
+            
+            // cout<<_source.col_2[i]<<_source.col_3[i]<<endl;
+
+            string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]);
+            string temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]);
+            // if (temp_string_opcode != "" && temp_string_symbol_table != "") //有抓取到值
+            // {
+            //     cout << temp_string_opcode << temp_string_symbol_table << endl;
+            // }
+            // else
+            // {
+            //     cout << "can't find the OPcode" << endl;
+            //     return;
+            // }
+        }
+    }
+};
 
 int main()
 {
@@ -410,6 +459,9 @@ int main()
     opcode_file opcode;
     opcode.load_data();
     // opcode.print_all_col();
-    cout<< "--count-object-code"<<endl;
+    cout << "--count-object-code" << endl;
+    object_code object;
+    object.generate(source, opcode);
+
     cout << "--End--" << endl;
 }
