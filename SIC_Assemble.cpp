@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <bitset>
 
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
 #define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
@@ -114,6 +115,32 @@ public:
         {
             return "0000";
         }
+
+        if (_label.find(",") != std::string::npos) //找到 ","
+        {
+            string temp = "";
+            for (size_t i = 0; i < _label.size(); i++)
+            {
+                if (_label.at(i) != ',')
+                {
+                    temp = temp + _label.at(i);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            int temp_int = hex_to_dec(the_loc_of(temp)); //遞迴 後執
+            bitset<16> bt(temp_int);
+            // cout << the_loc_of(temp) << " | " << temp_int << " | " << bt << endl;
+            bt.set(15);
+            // cout << "after " << bt << endl;
+            int after_int = (int)(bt.to_ulong());
+            string after_string = dec_to_hex(after_int);
+            // cout << after_int << " | " << after_string << endl;
+            return after_string;
+        }
+
         for (size_t i = 0; i < label_name.size(); i++)
         {
             if (label_name[i] == _label)
@@ -424,8 +451,11 @@ public:
 };
 class object_code : public source_file, public opcode_file //繼承自source,opcode
 {
+private:
+    const static int object_max_num = 6; //每一行object code 有六個位元
 public:
-    vector<string> Obj_code;
+    vector<string>
+        Obj_code;
     string get_BYTE_word(string _statement)
     {
         string temp = "";
@@ -470,28 +500,24 @@ public:
 
             if (temp_string_opcode == "BYTE")
             {
-                //清空the address 給的訊息
-                temp_string_opcode = "";
+
+                temp_string_opcode = ""; //清空the address of給的訊息
                 result = get_BYTE_word(_source.col_3[i]);
             }
             else if (temp_string_opcode == "WORD") //遇到word補'0'
             {
-                temp_string_opcode = "00";
                 stringstream ss;
                 string num = dec_to_hex(atoi(_source.col_3[i].c_str()));
-                ss << setw(4) << setfill('0') << num;
-                ss >> temp_string_symbol_table;
-                result = temp_string_opcode + temp_string_symbol_table;
+                ss << setw(object_max_num) << setfill('0') << num; //補0 補到object code的最多的位元數
+                ss >> result;
             }
             else if (temp_string_opcode == "RESW") //沒有object code
             {
-                temp_string_opcode = "";
-                temp_string_symbol_table = "";
+                result = "";
             }
             else if (temp_string_opcode == "RESB") //沒有object code
             {
-                temp_string_opcode = "";
-                temp_string_symbol_table = "";
+                result = "";
             }
             else if (temp_string_opcode == "END") //沒有object code
             {
