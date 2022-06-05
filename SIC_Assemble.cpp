@@ -110,15 +110,18 @@ public:
 
     string the_loc_of(string _label)
     {
+        if (_label == "")
+        {
+            return "0000";
+        }
         for (size_t i = 0; i < label_name.size(); i++)
         {
             if (label_name[i] == _label)
             {
-                cout << "label: " << label_name[i] << " -> " << label_address[i] << endl;
                 return label_address[i];
             }
         }
-        cout << "here is no label " << _label << "please check symbol table" << endl;
+        cout << "here is no label \"" << _label << "\" please check symbol table" << endl;
         return "";
     };
 
@@ -337,16 +340,20 @@ public:
 
     string the_address_of(string _statement)
     { //輸入OPCODE 返還 address
-        for (size_t i = 0; i < label_name.size(); i++)
+        if (_statement == "BYTE" || _statement == "WORD" || _statement == "RESW" || _statement == "RESB" || _statement == "END")
+        {
+            return _statement; //遇到特殊狀況交由 col_3處理 直接通過
+        }
+
+        for (size_t i = 0; i < label_name.size(); i++) //在opcode 中尋找
         {
             if (label_name[i] == _statement)
             {
-                cout << "op_code: " << label_name[i] << " -> " << address[i] << endl;
                 return address[i];
             }
         }
         cout << "here is wrong op_code: " << _statement << " please check source file(.txt)" << endl;
-        return "";
+        return "out";
     }
 
     void load_data(void)
@@ -365,7 +372,7 @@ public:
                 {
                     int split_char_ascii = (int)line.at(i);
                     char type = char_type(split_char_ascii);
-                    if (type != 's')
+                    if (type != 's' && type != 'r')
                     {
                         temp_string.push_back(line.at(i));
                     }
@@ -419,25 +426,86 @@ class object_code : public source_file, public opcode_file //繼承自source,opc
 {
 public:
     vector<string> Obj_code;
+    string get_BYTE_word(string _statement)
+    {
+        string temp = "";
+        bool flag = false;
+        char type = _statement.at(0);
+        for (size_t i = 1; i < _statement.size(); i++)
+        {
+            if (_statement[i] == '\'')
+            {
+                flag = !flag;
+                i++;
+            }
+            if (flag == true)
+            {
+                if (type == 'C')
+                {
+                    // cout<< dec_to_hex(_statement.at(i));
+                    temp = temp + dec_to_hex(_statement.at(i));
+                }
+                else if (type == 'X')
+                {
+                    // cout << _statement.at(i);
+                    temp = temp + _statement.at(i);
+                }
+            }
+        }
+        // cout << "get_BYTE " << temp << endl;
+        return temp;
+    }
     void generate(source_file &_source, opcode_file &_opcode) //生成object_code
     {
         for (size_t i = 0; i < _source.col_2.size(); i++)
         {
-            if (_source.col_2[i] == "START")i++;
-            
+            if (_source.col_2[i] == "START")
+                i++;
+
             // cout<<_source.col_2[i]<<_source.col_3[i]<<endl;
 
-            string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]);
-            string temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]);
-            // if (temp_string_opcode != "" && temp_string_symbol_table != "") //有抓取到值
-            // {
-            //     cout << temp_string_opcode << temp_string_symbol_table << endl;
-            // }
-            // else
-            // {
-            //     cout << "can't find the OPcode" << endl;
-            //     return;
-            // }
+            string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]); //輸入col_2 獲得 opcode
+            string temp_string_symbol_table = "";
+            string result = "";
+
+            if (temp_string_opcode == "BYTE")
+            {
+                //清空the address 給的訊息
+                temp_string_opcode = "";
+                result = get_BYTE_word(_source.col_3[i]);
+            }
+            else if (temp_string_opcode == "WORD") //遇到word補'0'
+            {
+                temp_string_opcode = "00";
+                stringstream ss;
+                string num = dec_to_hex(atoi(_source.col_3[i].c_str()));
+                ss << setw(4) << setfill('0') << num;
+                ss >> temp_string_symbol_table;
+                result = temp_string_opcode + temp_string_symbol_table;
+            }
+            else if (temp_string_opcode == "RESW") //沒有object code
+            {
+                temp_string_opcode = "";
+                temp_string_symbol_table = "";
+            }
+            else if (temp_string_opcode == "RESB") //沒有object code
+            {
+                temp_string_opcode = "";
+                temp_string_symbol_table = "";
+            }
+            else if (temp_string_opcode == "END") //沒有object code
+            {
+                temp_string_opcode = "";
+                temp_string_symbol_table = "";
+            }
+            else
+            {
+                temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]); // 輸入col_3 獲得 loc
+                result = temp_string_opcode + temp_string_symbol_table;
+            }
+            // cout << temp_string_opcode << "|" << temp_string_symbol_table << endl;
+
+            cout << i << " : " << result << endl;
         }
     }
 };
@@ -458,7 +526,7 @@ int main()
     cout << "--op-code--" << endl;
     opcode_file opcode;
     opcode.load_data();
-    // opcode.print_all_col();
+    opcode.print_all_col();
     cout << "--count-object-code" << endl;
     object_code object;
     object.generate(source, opcode);
