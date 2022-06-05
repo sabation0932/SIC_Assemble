@@ -130,7 +130,7 @@ public:
                     break;
                 }
             }
-            int temp_int = hex_to_dec(the_loc_of(temp)); //遞迴 後執
+            int temp_int = hex_to_dec(the_loc_of(temp)); //遞迴
             bitset<16> bt(temp_int);
             // cout << the_loc_of(temp) << " | " << temp_int << " | " << bt << endl;
             bt.set(15);
