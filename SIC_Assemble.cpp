@@ -150,7 +150,25 @@ public:
         }
         cout << "here is no label \"" << _label << "\" please check symbol table" << endl;
         return "";
-    };
+    }
+
+    string length_of_loc()
+    {
+        static string start = "";
+        static string end = "";
+        for (size_t i = 0; i < col_2.size(); i++)
+        {
+            if (col_2[i] == "START")
+            {
+                start = Loc[i];
+            }
+            if (col_2[i] == "END")
+            {
+                end = Loc[i];
+            }
+        }
+        return dec_to_hex(hex_to_dec(end) - hex_to_dec(start));
+    }
 
     void print_all_col(void)
     {
@@ -454,8 +472,24 @@ class object_code : public source_file, public opcode_file //繼承自source,opc
 private:
     const static int object_max_num = 6; //每一行object code 有六個位元
 public:
-    vector<string>
-        Obj_code;
+    vector<string> Obj_code;
+    int length_of_object_code()
+    {
+        static int length = 0;
+        if (Obj_code.size() == 0)
+        {
+            cout << "no object_code to count length" << endl;
+            return 0;
+        }
+
+        for (size_t i = 0; i < Obj_code.size(); i++)
+        {
+            length = length + Obj_code[i].size();
+            cout << length << endl;
+        }
+        cout << dec_to_hex(length) << endl;
+        return length;
+    }
     string get_BYTE_word(string _statement)
     {
         string temp = "";
@@ -532,6 +566,7 @@ public:
             // cout << temp_string_opcode << "|" << temp_string_symbol_table << endl;
 
             cout << i << " : " << result << endl;
+            Obj_code.push_back(result);
         }
     }
 };
@@ -544,7 +579,7 @@ int main()
     cout << "------" << endl;
     cout << "--loc-count--" << endl;
     source.loc_count_fetch();
-    // source.print_all_col();
+    source.print_all_col();
     cout << "---symbol-table--" << endl;
     source.symbol_table();
     // source.print_symbol_table();
@@ -556,6 +591,8 @@ int main()
     cout << "--count-object-code" << endl;
     object_code object;
     object.generate(source, opcode);
+    cout << "--count-length--" << endl;
+    source.length_of_loc();
 
     cout << "--End--" << endl;
 }
