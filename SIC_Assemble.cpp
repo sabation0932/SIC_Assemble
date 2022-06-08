@@ -565,8 +565,49 @@ public:
             }
             // cout << temp_string_opcode << "|" << temp_string_symbol_table << endl;
 
-            cout << i << " : " << result << endl;
+            // cout << i << " : " << result << endl;
             Obj_code.push_back(result);
+        }
+    }
+    void output_T()
+    {
+        string record_byte_hex = "";
+        int record_byte_dec = 0;
+        bool flag = false;
+
+        for (size_t i = 0; i < Obj_code.size(); i++)
+        {
+            record_byte_dec += Obj_code[i].size() / 2;
+            if (Obj_code[i] != "")
+            {
+                flag = false;
+            }
+
+            if (record_byte_dec == hex_to_dec("1e"))
+            {
+                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                record_byte_dec = 0;
+                cout << "---" << endl;
+            }
+            else if (record_byte_dec > hex_to_dec("1e"))
+            {
+                record_byte_dec -= Obj_code[i].size() / 2;
+                i--;
+                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                record_byte_dec = 0;
+                cout << "---" << endl;
+            }
+
+            else if (Obj_code[i].size() == 0 && flag == false)
+            {
+                record_byte_dec = 0;
+                cout << "---" << endl;
+                flag = true;
+            }
+            else if (flag == false)
+            {
+                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+            }
         }
     }
 };
@@ -593,6 +634,8 @@ int main()
     object.generate(source, opcode);
     cout << "--count-length--" << endl;
     source.length_of_loc();
+    cout << "--output-H--" << endl;
+    object.output_T();
 
     cout << "--End--" << endl;
 }
