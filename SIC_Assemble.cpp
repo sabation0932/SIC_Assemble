@@ -592,6 +592,15 @@ public:
             Obj_code.push_back(result);
         }
     }
+    void output_H(source_file &_source)
+    {
+        string range = _source.set(); //獲得基本常數 名稱 開始 結束 返回距離
+        cout << "H";
+        cout << add_lecture(_source.name, ' ', 6, "back"); //補滿
+        cout << add_lecture(_source.start_hex, '0', 6, "front");
+        cout << add_lecture(range, '0', 6, "front");
+        cout << endl;
+    }
     void output_T()
     {
         string record_byte_hex = "";
@@ -633,14 +642,10 @@ public:
             }
         }
     }
-    void output_H(source_file &_source)
+    void output_E(source_file &_source)
     {
-        string range = _source.set(); //獲得基本常數 名稱 開始 結束 返回距離
-        cout << "H";
-        cout << add_lecture(_source.name, ' ', 6, "back"); //補滿
-        cout << add_lecture(_source.start_hex, '0', 6, "front");
-        cout << add_lecture(range, '0', 6, "front");
-        cout << endl;
+        cout << "E";
+        cout << add_lecture(_source.start_hex, '0', 6, "front") << endl;
     }
 };
 
@@ -670,6 +675,8 @@ int main()
     object.output_H(source);
     cout << "--output-T--" << endl;
     object.output_T();
+    cout << "--output-E--" << endl;
+    object.output_E(source);
 
     cout << "--fin--" << endl;
 }
