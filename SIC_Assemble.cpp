@@ -73,6 +73,12 @@ int hex_to_dec(string _hex_value)
     // cout << "hex = " << _hex_value << " dec = " << dec_value << endl;
     return dec_value;
 }
+string hex_add(string _hex1, string _hex2)
+{
+    string temp = dec_to_hex(hex_to_dec(_hex1) + hex_to_dec(_hex2));
+    // cout << "hex1 = " << _hex1 << " hex2 = " << _hex2 << " add: " << temp << endl;
+    return temp;
+}
 string add_lecture(string _message, char _sign, int _length, string back_or_front)
 {
     stringstream ss;
@@ -183,7 +189,6 @@ public:
             {
                 start_hex = Loc[i];
                 name = col_1[i];
-                cout << "name:" << name << endl;
             }
             if (col_2[i] == "END")
             {
@@ -601,11 +606,14 @@ public:
         cout << add_lecture(range, '0', 6, "front");
         cout << endl;
     }
-    void output_T()
+    void output_T(string _start_hex)
     {
         string record_byte_hex = "";
         int record_byte_dec = 0;
         bool flag = false;
+        bool readable = true;
+        string output_message;
+        string start_hex_this_record = _start_hex;
 
         for (size_t i = 0; i < Obj_code.size(); i++)
         {
@@ -617,7 +625,20 @@ public:
 
             if (record_byte_dec == hex_to_dec("1e"))
             {
-                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                // cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                output_message += Obj_code[i];
+                if (readable == true)
+                {
+                    output_message = "T^" + add_lecture(start_hex_this_record, '0', 6, "front") + "^" + dec_to_hex(record_byte_dec) + "^" + output_message;
+                }
+                else
+                {
+                    output_message = "T" + add_lecture(start_hex_this_record, '0', 6, "front") + dec_to_hex(record_byte_dec) + output_message;
+                }
+
+                cout << output_message << endl;
+                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
             }
@@ -625,20 +646,49 @@ public:
             {
                 record_byte_dec -= Obj_code[i].size() / 2;
                 i--;
-                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                output_message += Obj_code[i];
+                if (readable == true)
+                {
+                    output_message = "T^" + add_lecture(start_hex_this_record, '0', 6, "front") + "^" + dec_to_hex(record_byte_dec) + "^" + output_message;
+                }
+                else
+                {
+                    output_message = "T" + dec_to_hex(record_byte_dec) + output_message;
+                }
+                cout << output_message << endl;
+                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
             }
 
             else if (Obj_code[i].size() == 0 && flag == false)
             {
+
+                record_byte_dec = record_byte_dec + 6; // line 90,95 不輸出的object code 似乎還是佔有位子?
+                if (readable == true)
+                {
+                    output_message = "T^" + add_lecture(start_hex_this_record, '0', 6, "front") + "^" + dec_to_hex(record_byte_dec) + "^" + output_message;
+                }
+                else
+                {
+                    output_message = "T" + dec_to_hex(record_byte_dec) + output_message;
+                }
+                cout << output_message << endl;
+                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
                 flag = true;
             }
             else if (flag == false)
             {
-                cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                // cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
+                output_message += Obj_code[i];
+                if (readable == true)
+                {
+                    output_message += "^";
+                }
             }
         }
     }
@@ -674,7 +724,7 @@ int main()
     cout << "--output-H--" << endl;
     object.output_H(source);
     cout << "--output-T--" << endl;
-    object.output_T();
+    object.output_T(source.start_hex);
     cout << "--output-E--" << endl;
     object.output_E(source);
 
