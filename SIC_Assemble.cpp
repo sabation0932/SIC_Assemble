@@ -55,7 +55,6 @@ char char_type(int c_ascii)
         return '?';
     }
 }
-
 string dec_to_hex(int _dec_value)
 {
     stringstream ss;
@@ -73,6 +72,27 @@ int hex_to_dec(string _hex_value)
     ss >> hex >> dec_value; // int decimal_value
     // cout << "hex = " << _hex_value << " dec = " << dec_value << endl;
     return dec_value;
+}
+string add_lecture(string _message, char _sign, int _length, string back_or_front)
+{
+    stringstream ss;
+    if (back_or_front == "back")
+    {
+        while (_message.size() < _length)
+        {
+            _message.push_back(_sign);
+        }
+    }
+    else if (back_or_front == "front")
+    {
+        ss << setw(_length) << setfill(_sign) << _message;
+    }
+    else
+    {
+        cout << "back or front not define" << endl;
+    }
+    ss >> _message;
+    return _message;
 }
 
 class file_operate
@@ -105,6 +125,9 @@ public:
     vector<string> col_1;
     vector<string> col_2;
     vector<string> col_3;
+    string name;
+    string start_hex;
+    string end_hex;
 
     vector<string> label_name;
     vector<string> label_address;
@@ -152,22 +175,22 @@ public:
         return "";
     }
 
-    string length_of_loc()
+    string set()
     {
-        static string start = "";
-        static string end = "";
         for (size_t i = 0; i < col_2.size(); i++)
         {
             if (col_2[i] == "START")
             {
-                start = Loc[i];
+                start_hex = Loc[i];
+                name = col_1[i];
+                cout << "name:" << name << endl;
             }
             if (col_2[i] == "END")
             {
-                end = Loc[i];
+                end_hex = Loc[i];
             }
         }
-        return dec_to_hex(hex_to_dec(end) - hex_to_dec(start));
+        return dec_to_hex(hex_to_dec(end_hex) - hex_to_dec(start_hex));
     }
 
     void print_all_col(void)
@@ -610,6 +633,15 @@ public:
             }
         }
     }
+    void output_H(source_file &_source)
+    {
+        string range = _source.set(); //獲得基本常數 名稱 開始 結束 返回距離
+        cout << "H";
+        cout << add_lecture(_source.name, ' ', 6, "back"); //補滿
+        cout << add_lecture(_source.start_hex, '0', 6, "front");
+        cout << add_lecture(range, '0', 6, "front");
+        cout << endl;
+    }
 };
 
 int main()
@@ -633,9 +665,11 @@ int main()
     object_code object;
     object.generate(source, opcode);
     cout << "--count-length--" << endl;
-    source.length_of_loc();
+    cout << "output" << endl;
     cout << "--output-H--" << endl;
+    object.output_H(source);
+    cout << "--output-T--" << endl;
     object.output_T();
 
-    cout << "--End--" << endl;
+    cout << "--fin--" << endl;
 }
