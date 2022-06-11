@@ -9,6 +9,7 @@
 #define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
 #define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
 
+#define readable_mode true
 #define code_max_col 3 // 0,1,2,3 總共有4欄
 #define loc_col 0      // location counter 定義在0
 using namespace std;
@@ -127,6 +128,7 @@ class source_file
 {
 public:
     fstream source;
+    ofstream output;
     vector<string> Loc;
     vector<string> col_1;
     vector<string> col_2;
@@ -198,8 +200,21 @@ public:
         return dec_to_hex(hex_to_dec(end_hex) - hex_to_dec(start_hex));
     }
 
-    void print_all_col(void)
+    void print_loc_and_source(string output_path)
     {
+        if (output_path != "")
+        {
+            ofstream location;
+            location.open(output_path);
+            for (int i = 0; i < col_1.size(); i++)
+            {
+                location << Loc[i] << "\t";
+                location << col_1[i] << "\t";
+                location << col_2[i] << "\t";
+                location << col_3[i] << endl;
+            }
+            location.close();
+        }
         for (int i = 0; i < col_1.size(); i++)
         {
             cout << i << "\t";
@@ -382,8 +397,18 @@ public:
         }
     }
 
-    void print_symbol_table()
+    void print_symbol_table(string output_path)
     {
+        if (output_path != "")
+        {
+            ofstream symbol_table;
+            symbol_table.open(output_path);
+            for (size_t i = 0; i < label_name.size(); i++)
+            {
+                symbol_table << label_name[i] << "\t" << label_address[i] << endl;
+            }
+            symbol_table.close();
+        }
         for (size_t i = 0; i < label_name.size(); i++)
         {
             cout << label_name[i] << "\t" << label_address[i] << endl;
@@ -597,23 +622,44 @@ public:
             Obj_code.push_back(result);
         }
     }
-    void output_H(source_file &_source)
+    void print_loc_source_object(source_file &_source, string output_path)
+    {
+        ofstream source_obj_code;
+        source_obj_code.open(output_path);
+        for (size_t i = 0; i < _source.col_1.size(); i++)
+        {
+            source_obj_code << _source.Loc[i] << "\t";
+            source_obj_code << _source.col_1[i] << "\t";
+            source_obj_code << _source.col_2[i] << "\t";
+            source_obj_code << _source.col_3[i] << "\t";
+            if (i != 0)
+            {
+                source_obj_code << Obj_code[i - 1] << endl;
+            }
+            else
+            {
+                source_obj_code << endl;
+            }
+        }
+    }
+    void output_H(source_file &_source, ofstream &output_stream)
     {
         string range = _source.set(); //獲得基本常數 名稱 開始 結束 返回距離
-        cout << "H";
-        cout << add_lecture(_source.name, ' ', 6, "back"); //補滿
-        cout << add_lecture(_source.start_hex, '0', 6, "front");
-        cout << add_lecture(range, '0', 6, "front");
-        cout << endl;
+        output_stream << "H";
+        output_stream << add_lecture(_source.name, ' ', 6, "back"); //補滿
+        output_stream << add_lecture(_source.start_hex, '0', 6, "front");
+        output_stream << add_lecture(range, '0', 6, "front");
+        output_stream << endl;
     }
-    void output_T(string _start_hex)
+    void output_T(source_file &_source, ofstream &output_stream)
     {
         string record_byte_hex = "";
         int record_byte_dec = 0;
         bool flag = false;
-        bool readable = true;
+        bool readable = readable_mode;
         string output_message;
-        string start_hex_this_record = _start_hex;
+        string start_hex_this_record = _source.start_hex;
+        int loc_row = 0;
 
         for (size_t i = 0; i < Obj_code.size(); i++)
         {
@@ -625,6 +671,7 @@ public:
 
             if (record_byte_dec == hex_to_dec("1e"))
             {
+
                 // cout << i << ":" << Obj_code[i] << " | " << Obj_code[i].size() << " | " << dec_to_hex(record_byte_dec) << endl;
                 output_message += Obj_code[i];
                 if (readable == true)
@@ -636,8 +683,11 @@ public:
                     output_message = "T" + add_lecture(start_hex_this_record, '0', 6, "front") + dec_to_hex(record_byte_dec) + output_message;
                 }
 
-                cout << output_message << endl;
-                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_stream << output_message << endl;
+                // start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                loc_row = i + 2;
+                start_hex_this_record = _source.Loc[loc_row]; //
+
                 output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
@@ -646,17 +696,19 @@ public:
             {
                 record_byte_dec -= Obj_code[i].size() / 2;
                 i--;
-                output_message += Obj_code[i];
                 if (readable == true)
                 {
                     output_message = "T^" + add_lecture(start_hex_this_record, '0', 6, "front") + "^" + dec_to_hex(record_byte_dec) + "^" + output_message;
                 }
                 else
                 {
-                    output_message = "T" + dec_to_hex(record_byte_dec) + output_message;
+                    output_message = "T" + add_lecture(start_hex_this_record, '0', 6, "front") + dec_to_hex(record_byte_dec) + output_message;
                 }
-                cout << output_message << endl;
-                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_stream << output_message << endl;
+
+                loc_row = i + 2;
+                start_hex_this_record = _source.Loc[loc_row]; //
+
                 output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
@@ -664,18 +716,18 @@ public:
 
             else if (Obj_code[i].size() == 0 && flag == false)
             {
-
-                record_byte_dec = record_byte_dec + 6; // line 90,95 不輸出的object code 似乎還是佔有位子?
                 if (readable == true)
                 {
                     output_message = "T^" + add_lecture(start_hex_this_record, '0', 6, "front") + "^" + dec_to_hex(record_byte_dec) + "^" + output_message;
                 }
                 else
                 {
-                    output_message = "T" + dec_to_hex(record_byte_dec) + output_message;
+                    output_message = "T" + add_lecture(start_hex_this_record, '0', 6, "front") + dec_to_hex(record_byte_dec) + output_message;
                 }
-                cout << output_message << endl;
-                start_hex_this_record = hex_add(start_hex_this_record, dec_to_hex(record_byte_dec));
+                output_stream << output_message << endl;
+                loc_row = i + 4;                              // line 90,95 不輸出的object code 似乎還是佔有位子?
+                start_hex_this_record = _source.Loc[loc_row]; //
+
                 output_message = "";
                 record_byte_dec = 0;
                 cout << "---" << endl;
@@ -692,10 +744,10 @@ public:
             }
         }
     }
-    void output_E(source_file &_source)
+    void output_E(source_file &_source, ofstream &output_stream)
     {
-        cout << "E";
-        cout << add_lecture(_source.start_hex, '0', 6, "front") << endl;
+        output_stream << "E";
+        output_stream << add_lecture(_source.start_hex, '0', 6, "front") << endl;
     }
 };
 
@@ -707,26 +759,30 @@ int main()
     cout << "------" << endl;
     cout << "--loc-count--" << endl;
     source.loc_count_fetch();
-    source.print_all_col();
+    source.print_loc_and_source("location.txt");
     cout << "---symbol-table--" << endl;
     source.symbol_table();
-    // source.print_symbol_table();
+    source.print_symbol_table("symbol_table.txt");
 
     cout << "--op-code--" << endl;
     opcode_file opcode;
     opcode.load_data();
     opcode.print_all_col();
-    cout << "--count-object-code" << endl;
+    cout << "--generate-object-code" << endl;
     object_code object;
     object.generate(source, opcode);
+    object.print_loc_source_object(source, "source_obj_code.txt");
     cout << "--count-length--" << endl;
-    cout << "output" << endl;
+    cout << "-output_final_object_program" << endl;
+    ofstream final_object_program;
+    final_object_program.open("final_object_program.txt");
     cout << "--output-H--" << endl;
-    object.output_H(source);
+    object.output_H(source, final_object_program);
     cout << "--output-T--" << endl;
-    object.output_T(source.start_hex);
+    object.output_T(source, final_object_program);
     cout << "--output-E--" << endl;
-    object.output_E(source);
+    object.output_E(source, final_object_program);
+    final_object_program.close();
 
     cout << "--fin--" << endl;
 }
