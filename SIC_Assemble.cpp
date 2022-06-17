@@ -102,28 +102,6 @@ string add_lecture(string _message, char _sign, int _length, string back_or_fron
     return _message;
 }
 
-class file_operate
-{
-private:
-    fstream file;
-    string path;
-
-public:
-    void load_file(fstream _file, string _path)
-    {
-        file.open(path, ios::in);
-        if (file.is_open())
-        {
-            string line;
-            while (getline(file, line))
-            {
-                cout << line << endl;
-                print_ascii(line);
-            }
-        }
-    }
-};
-
 class source_file
 {
 public:
@@ -165,10 +143,8 @@ public:
             bitset<16> bt(temp_int);
             // cout << the_loc_of(temp) << " | " << temp_int << " | " << bt << endl;
             bt.set(15);
-            // cout << "after " << bt << endl;
             int after_int = (int)(bt.to_ulong());
             string after_string = dec_to_hex(after_int);
-            // cout << after_int << " | " << after_string << endl;
             return after_string;
         }
 
