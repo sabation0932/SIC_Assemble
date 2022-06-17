@@ -6,8 +6,8 @@
 #include <sstream>
 #include <bitset>
 
-#define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
-#define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
+#define SOURCE_PATH "SICXEsource.txt"
+#define OPCODE_PATH "opcode.txt"
 
 #define readable_mode true
 #define code_max_col 3 // 0,1,2,3 總共有4欄
@@ -46,13 +46,13 @@ char char_type(int c_ascii)
     {
         return 's'; // space
     }
-    else if (c_ascii == 39 || c_ascii == 44)
+    else if (c_ascii == int('\'') || c_ascii == int('?') || c_ascii == int('#') || c_ascii == int('+') || c_ascii == int('@') || c_ascii == int(','))
     {
-        return 'm'; // Mark "'" "?"
+        return 'm'; // Mark ' ? # + @ ,
     }
     else
     {
-        cout << "ERROR!! 有ascii沒被定義 請查看 char_type() 內容" << endl;
+        cout << "ERROR!! " << char(c_ascii) << " ascii = " << c_ascii << " 沒被定義 請查看 char_type() 內容" << endl;
         return '?';
     }
 }
@@ -200,6 +200,16 @@ public:
             cout << col_3[i] << endl;
         }
     }
+    void print_source()
+    {
+        for (int i = 0; i < col_1.size(); i++)
+        {
+            cout << i << "\t";
+            cout << col_1[i] << "\t";
+            cout << col_2[i] << "\t";
+            cout << col_3[i] << endl;
+        }
+    }
     void print_loc(void)
     {
         for (int i = 0; i < Loc.size(); i++)
@@ -253,6 +263,8 @@ public:
         static string start_num;
         for (size_t i = 0; i < col_1.size(); i++) //讀取整裡過後的 Source Statement
         {
+            string format ="";
+            format = format_classifier(col_2[i],col_3[i]);
             if (col_2[i] == "START")
             {
                 start_is_find = true;
@@ -274,6 +286,13 @@ public:
                 int size = find_BYTE_size(temp);
                 Loc.push_back(loc_counter(start_num, size));
             }
+
+            else if (col_2[i] == "RESW")
+            {
+                cout << "find RESW at" << i << endl;
+                Loc.push_back(loc_counter(start_num, atoi(col_3[i].c_str()) * 3));
+            }
+
             else if (col_2[i] == "RESB")
             {
                 cout << "find RESB at " << i << endl;
@@ -285,6 +304,43 @@ public:
                 Loc.push_back(loc_counter(start_num, 3));
             }
         }
+    }
+
+    string  format_classifier(string _col_2 ,string _col_3)
+    { // format分類器
+        string format_message = "default";
+        //檢查col 3是否有 #Immediate 或 @Indirect
+        if (_col_2=="" || _col_3 == "")
+        {
+            return format_message;
+        }
+        
+        
+        if (_col_3.at(0) == '#')
+        {
+            format_message = "Immediate";
+        }
+        else if (_col_3.at(0) == '@')
+        {
+            format_message = "Indirect";
+        }
+        else if (_col_2.at(0) == '+')
+        {
+            format_message = "Extended";
+        }
+        else if (_col_2.find(",") != std::string::npos)
+        {
+            format_message = "Indexed";
+        }
+        else
+        {
+            format_message = "normal";
+        }
+        cout << format_message << endl;
+        return format_message;
+
+        //檢查col 2是否有 + Extented 或 m,x Indexed addressing
+        //都沒有就是PC relative
     }
 
     void fetch_data(int _col_number, string _message)
@@ -320,7 +376,7 @@ public:
 
                 // cout << line << endl;
                 // print_ascii(line);
-                // cout << endl;
+                // cout <<"------"<<endl;
                 string temp_string = "";
                 int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
@@ -353,7 +409,7 @@ public:
                     }
                     else
                     {
-                        cout << "out control: " << type << endl;
+                        cout << "out control : " << type << " which ascii is " << int(type) << endl;
                     }
                 }
                 if (temp_string != "")
@@ -732,33 +788,9 @@ int main()
     cout << "--start--" << endl;
     source_file source;
     source.load_data();
-    cout << "------" << endl;
-    cout << "--loc-count--" << endl;
+    source.print_source();
     source.loc_count_fetch();
-    source.print_loc_and_source("location.txt");
-    cout << "---symbol-table--" << endl;
-    source.symbol_table();
-    source.print_symbol_table("symbol_table.txt");
-
-    cout << "--op-code--" << endl;
-    opcode_file opcode;
-    opcode.load_data();
-    opcode.print_all_col();
-    cout << "--generate-object-code" << endl;
-    object_code object;
-    object.generate(source, opcode);
-    object.print_loc_source_object(source, "source_obj_code.txt");
-    cout << "--count-length--" << endl;
-    cout << "-output_final_object_program" << endl;
-    ofstream final_object_program;
-    final_object_program.open("final_object_program.txt");
-    cout << "--output-H--" << endl;
-    object.output_H(source, final_object_program);
-    cout << "--output-T--" << endl;
-    object.output_T(source, final_object_program);
-    cout << "--output-E--" << endl;
-    object.output_E(source, final_object_program);
-    final_object_program.close();
+    source.print_loc_and_source("");
 
     cout << "--fin--" << endl;
 }
