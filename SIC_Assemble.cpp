@@ -263,6 +263,8 @@ public:
         static string start_num;
         for (size_t i = 0; i < col_1.size(); i++) //讀取整裡過後的 Source Statement
         {
+            string format ="";
+            format = format_classifier(col_2[i],col_3[i]);
             if (col_2[i] == "START")
             {
                 start_is_find = true;
@@ -284,10 +286,6 @@ public:
                 int size = find_BYTE_size(temp);
                 Loc.push_back(loc_counter(start_num, size));
             }
-            else if (col_2[i] == "BASE")
-            {
-                Loc.push_back("");
-            }
 
             else if (col_2[i] == "RESW")
             {
@@ -300,46 +298,24 @@ public:
                 cout << "find RESB at " << i << endl;
                 Loc.push_back(loc_counter(start_num, atoi(col_3[i].c_str())));
             }
-            else if (col_2[i] == "CLEAR" || col_2[i] == "COMPR" || col_2[i] == "TIXR")
-            {
-                Loc.push_back(loc_counter(start_num, 2));
-            }
 
-            else // 除了特殊規則以外
+            else
             {
-                string format = "";
-                format = format_classifier(i, col_2[i], col_3[i], "location"); //若沒有找到相應類型 會還傳 "default"
-                if (format == "normal")
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-                else if (format == "default")
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-
-                else if (format == "Extended")
-                {
-                    Loc.push_back(loc_counter(start_num, 4));
-                }
-                else
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-                cout << i << " : " << format << endl;
+                Loc.push_back(loc_counter(start_num, 3));
             }
         }
     }
 
-    string format_classifier(int _line, string _col_2, string _col_3, string _mode)
+    string  format_classifier(string _col_2 ,string _col_3)
     { // format分類器
         string format_message = "default";
         //檢查col 3是否有 #Immediate 或 @Indirect
-        if (_col_2 == "" || _col_3 == "")
+        if (_col_2=="" || _col_3 == "")
         {
             return format_message;
         }
-
+        
+        
         if (_col_3.at(0) == '#')
         {
             format_message = "Immediate";
@@ -348,18 +324,9 @@ public:
         {
             format_message = "Indirect";
         }
-        else
+        else if (_col_2.at(0) == '+')
         {
-            /* code */
-        }
-
-        if (_col_2.at(0) == '+')
-        {
-            format_message = "Extended"; //在mode location 中只有 Extende 會影像 location counter 計算
-            if (_mode == "location")
-            {
-                return format_message;
-            }
+            format_message = "Extended";
         }
         else if (_col_2.find(",") != std::string::npos)
         {
@@ -369,10 +336,11 @@ public:
         {
             format_message = "normal";
         }
+        cout << format_message << endl;
         return format_message;
 
         //檢查col 2是否有 + Extented 或 m,x Indexed addressing
-        //都沒有就是PC relative 或 BC relative
+        //都沒有就是PC relative
     }
 
     void fetch_data(int _col_number, string _message)
@@ -406,9 +374,9 @@ public:
             while (getline(source, line))
             {
 
-                cout << line << endl;
-                print_ascii(line);
-                cout << "------" << endl;
+                // cout << line << endl;
+                // print_ascii(line);
+                // cout <<"------"<<endl;
                 string temp_string = "";
                 int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
