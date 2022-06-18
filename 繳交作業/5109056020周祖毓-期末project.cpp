@@ -6,8 +6,8 @@
 #include <sstream>
 #include <bitset>
 
-#define SOURCE_PATH "SICXEsource.txt"
-#define OPCODE_PATH "opcode.txt"
+#define SOURCE_PATH "../110_Assemble_FinalProject/source.txt"
+#define OPCODE_PATH "../110_Assemble_FinalProject/opcode.txt"
 
 #define readable_mode true
 #define code_max_col 3 // 0,1,2,3 總共有4欄
@@ -46,13 +46,13 @@ char char_type(int c_ascii)
     {
         return 's'; // space
     }
-    else if (c_ascii == int('\'') || c_ascii == int('?') || c_ascii == int('#') || c_ascii == int('+') || c_ascii == int('@') || c_ascii == int(','))
+    else if (c_ascii == 39 || c_ascii == 44)
     {
-        return 'm'; // Mark ' ? # + @ ,
+        return 'm'; // Mark "'" "?"
     }
     else
     {
-        cout << "ERROR!! " << char(c_ascii) << " ascii = " << c_ascii << " 沒被定義 請查看 char_type() 內容" << endl;
+        cout << "ERROR!! 有ascii沒被定義 請查看 char_type() 內容" << endl;
         return '?';
     }
 }
@@ -200,16 +200,6 @@ public:
             cout << col_3[i] << endl;
         }
     }
-    void print_source()
-    {
-        for (int i = 0; i < col_1.size(); i++)
-        {
-            cout << i << "\t";
-            cout << col_1[i] << "\t";
-            cout << col_2[i] << "\t";
-            cout << col_3[i] << endl;
-        }
-    }
     void print_loc(void)
     {
         for (int i = 0; i < Loc.size(); i++)
@@ -257,11 +247,11 @@ public:
         return size;
     }
 
-    void loc_count_fetch(int _begin, int _end)
+    void loc_count_fetch()
     {
         static bool start_is_find = false;
         static string start_num;
-        for (size_t i = _begin; i < _end; i++) //讀取整裡過後的 Source Statement
+        for (size_t i = 0; i < col_1.size(); i++) //讀取整裡過後的 Source Statement
         {
             if (col_2[i] == "START")
             {
@@ -269,7 +259,6 @@ public:
                 start_num = col_3[i];
                 Loc.push_back(loc_counter(start_num, 0)); // START 那一行
                 Loc.push_back(loc_counter(start_num, 0)); // START  的後一行 範例是 FIRST
-                i++;
             }
 
             else if (col_2[i] == "BYTE") //找到BYTE
@@ -285,124 +274,17 @@ public:
                 int size = find_BYTE_size(temp);
                 Loc.push_back(loc_counter(start_num, size));
             }
-            else if (col_2[i] == "BASE")
-            {
-                Loc.push_back("");
-                loc_count_fetch(i - 1, i); //抓取去一道指令的長度
-            }
-
-            else if (col_2[i] == "RESW")
-            {
-                cout << "find RESW at" << i << endl;
-                Loc.push_back(loc_counter(start_num, atoi(col_3[i].c_str()) * 3));
-            }
-
             else if (col_2[i] == "RESB")
             {
                 cout << "find RESB at " << i << endl;
                 Loc.push_back(loc_counter(start_num, atoi(col_3[i].c_str())));
             }
-            else if (col_2[i] == "CLEAR" || col_2[i] == "COMPR" || col_2[i] == "TIXR")
-            {
-                Loc.push_back(loc_counter(start_num, 2));
-            }
 
-            else // 除了特殊規則以外
+            else
             {
-                string format = "";
-                format = format_classifier(i, col_2[i], col_3[i], "location"); //若沒有找到相應類型 會還傳 "default"
-                if (format == "normal")
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-                else if (format == "default")
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-
-                else if (format == "Extended")
-                {
-                    Loc.push_back(loc_counter(start_num, 4));
-                }
-                else
-                {
-                    Loc.push_back(loc_counter(start_num, 3));
-                }
-                // cout << i << " : " << format << endl;
+                Loc.push_back(loc_counter(start_num, 3));
             }
         }
-    }
-
-    string format_classifier(int _line, string _col_2, string _col_3, string _mode)
-    { // format分類器
-        string format_message = "";
-        //檢查col 3是否有 #Immediate 或 @Indirect
-        if (_col_2 == "" || _col_3 == "")
-        {
-            return format_message;
-        }
-        //先檢查col_3 類型
-
-        if (_col_3.at(0) == '#')
-        {
-            format_message = "Immediate";
-            if (_mode == "object") // 在object 的計算下
-            {
-                if (_col_2.at(0) == '+')
-                {
-                    return "Extended+Immediate"; //同時是Exteded + Immediate
-                }
-
-                return format_message;
-            }
-        }
-        else if (_col_3.at(0) == '@')
-        {
-            format_message = "Indirect";
-            if (_mode == "object")
-            {
-                return format_message;
-            }
-        }
-        else
-        {
-            /* code */
-        }
-
-        //第二次 對 col_2 進行判斷
-
-        if (_col_2.at(0) == '+')
-        {
-            format_message = "Extended"; //在mode location 中只有 Extende 會影像 location counter 計算
-            if (_mode == "location")
-            {
-                return format_message;
-            }
-            else if (_mode == "object")
-            {
-                if (char_type(_col_3.at(0)) == 'm')
-                {
-
-                    cout << "here is + and # at " << _line << endl;
-                    return "Extended+Immediate";
-                }
-                else
-                {
-                }
-            }
-        }
-        else if (_col_3.find(",") != std::string::npos)
-        {
-            format_message = "Indexed";
-        }
-        else
-        {
-            format_message = "normal";
-        }
-        return format_message;
-
-        //檢查col 2是否有 + Extented 或 m,x Indexed addressing
-        //都沒有就是PC relative 或 BC relative
     }
 
     void fetch_data(int _col_number, string _message)
@@ -438,7 +320,7 @@ public:
 
                 // cout << line << endl;
                 // print_ascii(line);
-                // cout << "------" << endl;
+                // cout << endl;
                 string temp_string = "";
                 int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
@@ -471,7 +353,7 @@ public:
                     }
                     else
                     {
-                        cout << "out control : " << type << " which ascii is " << int(type) << endl;
+                        cout << "out control: " << type << endl;
                     }
                 }
                 if (temp_string != "")
@@ -666,143 +548,73 @@ public:
         // cout << "get_BYTE " << temp << endl;
         return temp;
     }
-    bool is_no_obj(string _col_2_)
-    {
-        if (_col_2_ == "START")
-            return true;
-        else if (_col_2_ == "RESW")
-            return true;
-        else if (_col_2_ == "RESB")
-            return true;
-        else
-        {
-            return false;
-        }
-    }
-    bool is_no_relation_with_(string _col_2_, string _col_3_, opcode_file &_opcode)
-    {
-        //直接對Loc動作
-        if (_col_2_ == "BYTE")
-        {
-            cout << "\t is BYTE " << get_BYTE_word(_col_3_) << endl;
-            Obj_code.push_back(get_BYTE_word(_col_3_));
-
-            return true;
-        }
-        if (_col_2_ == "WORD") //遇到word補'0'
-        {
-            string result;
-            stringstream ss;
-            string num = dec_to_hex(atoi(_col_3_.c_str()));
-            ss << setw(object_max_num) << setfill('0') << num; //補0 補到object code的最多的位元數
-            ss >> result;
-            Obj_code.push_back(result);
-            cout << "\t opcode" << result << endl;
-            return true;
-        }
-        if (_col_2_ == "RSUB") // OPcode 補'0'
-        {
-            string RSUB = _opcode.the_address_of(_col_2_);
-            RSUB = add_lecture(RSUB, '0', object_max_num, "back");
-            Obj_code.push_back(RSUB);
-            return true;
-        }
-
-        return false;
-    }
-    string obj_process(string _format_message, string _col_2, string _col_3)
-    {
-        string result = "";
-        if (_format_message == "normal")
-        {
-            /* code */
-            return "n";
-        }
-        if (_format_message == "Immediate")
-        {
-            return "#";
-        }
-        if (_format_message == "Extended+Immediate")
-        {
-            return "+#";
-        }
-        if (_format_message == "Extended")
-        {
-            return "+";
-        }
-        if (_format_message == "Indirect")
-        {
-            return "@";
-        }
-        if (_format_message == "Indexed")
-        {
-            return ",";
-        }
-
-        cout << _format_message << " not catched " << _col_2 << "|" << _col_3 << endl;
-        // exit(0);
-
-        return _format_message;
-    }
     void generate(source_file &_source, opcode_file &_opcode) //生成object_code
     {
         for (size_t i = 0; i < _source.col_2.size(); i++)
         {
-            if (is_no_obj(_source.col_2[i])) //如果不產生obj_code  添加“” ;
+            if (_source.col_2[i] == "START")
+                i++;
+
+            // cout<<_source.col_2[i]<<_source.col_3[i]<<endl;
+
+            string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]); //輸入col_2 獲得 opcode
+            string temp_string_symbol_table = "";
+            string result = "";
+
+            if (temp_string_opcode == "BYTE")
             {
-                Obj_code.push_back("");
-                continue;
+
+                temp_string_opcode = ""; //清空the address of給的訊息
+                result = get_BYTE_word(_source.col_3[i]);
             }
-
-            if (is_no_relation_with_(_source.col_2[i], _source.col_3[i], _opcode)) // BYTE , WORD
-                continue;
-
-            string format = _source.format_classifier(i, _source.col_2[i], _source.col_3[i], "object");
-            string here_obj_code = obj_process(format, _source.col_2[i], _source.col_3[i]);
-            Obj_code.push_back(here_obj_code);
-
-            //剩下都是要計算obj code
-
-            // string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]); //輸入col_2 獲得 opcode
-            // string temp_string_symbol_table = "";
-            // string result = "";
-
-            // else //非特殊情況
-            // {
-            //     temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]); // 輸入col_3 獲得 loc
-            //     result = temp_string_opcode + temp_string_symbol_table;
-            // }
+            else if (temp_string_opcode == "WORD") //遇到word補'0'
+            {
+                stringstream ss;
+                string num = dec_to_hex(atoi(_source.col_3[i].c_str()));
+                ss << setw(object_max_num) << setfill('0') << num; //補0 補到object code的最多的位元數
+                ss >> result;
+            }
+            else if (temp_string_opcode == "RESW") //沒有object code
+            {
+                result = "";
+            }
+            else if (temp_string_opcode == "RESB") //沒有object code
+            {
+                result = "";
+            }
+            else if (temp_string_opcode == "END") //沒有object code
+            {
+                temp_string_opcode = "";
+                temp_string_symbol_table = "";
+            }
+            else
+            {
+                temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]); // 輸入col_3 獲得 loc
+                result = temp_string_opcode + temp_string_symbol_table;
+            }
             // cout << temp_string_opcode << "|" << temp_string_symbol_table << endl;
 
             // cout << i << " : " << result << endl;
-            // Obj_code.push_back(result);
+            Obj_code.push_back(result);
         }
     }
     void print_loc_source_object(source_file &_source, string output_path)
     {
         ofstream source_obj_code;
         source_obj_code.open(output_path);
-        if (output_path != "")
+        for (size_t i = 0; i < _source.col_1.size(); i++)
         {
-            for (size_t i = 0; i < _source.col_1.size(); i++)
+            source_obj_code << _source.Loc[i] << "\t";
+            source_obj_code << _source.col_1[i] << "\t";
+            source_obj_code << _source.col_2[i] << "\t";
+            source_obj_code << _source.col_3[i] << "\t";
+            if (i != 0)
             {
-                source_obj_code << _source.Loc[i] << "\t";
-                source_obj_code << _source.col_1[i] << "\t";
-                source_obj_code << _source.col_2[i] << "\t";
-                source_obj_code << _source.col_3[i] << "\t";
-                source_obj_code << endl;
+                source_obj_code << Obj_code[i - 1] << endl;
             }
-        }
-        else
-        {
-            for (size_t i = 0; i < _source.col_1.size(); i++)
+            else
             {
-                cout << i << "\t";
-                cout << _source.Loc[i] << "\t";
-                cout << _source.col_1[i] << "\t";
-                cout << _source.col_2[i] << "\t";
-                cout << _source.col_3[i] << "\t";
-                cout << Obj_code[i] << endl;
+                source_obj_code << endl;
             }
         }
     }
@@ -920,22 +732,33 @@ int main()
     cout << "--start--" << endl;
     source_file source;
     source.load_data();
-    // source.print_source();
-    source.loc_count_fetch(0, source.col_2.size());
-    source.print_loc_and_source("");
-    cout << "--symbol-table--" << endl;
+    cout << "------" << endl;
+    cout << "--loc-count--" << endl;
+    source.loc_count_fetch();
+    source.print_loc_and_source("location.txt");
+    cout << "---symbol-table--" << endl;
     source.symbol_table();
-    // source.print_symbol_table("");
-    cout << "--load-OPCode" << endl;
+    source.print_symbol_table("symbol_table.txt");
+
+    cout << "--op-code--" << endl;
     opcode_file opcode;
     opcode.load_data();
     opcode.print_all_col();
-    cout << "--object--code--" << endl;
-
-    object_code XE_Obj;
-    XE_Obj.generate(source, opcode);
-    cout << "object-- code table" << endl;
-    XE_Obj.print_loc_source_object(source, "");
+    cout << "--generate-object-code" << endl;
+    object_code object;
+    object.generate(source, opcode);
+    object.print_loc_source_object(source, "source_obj_code.txt");
+    cout << "--count-length--" << endl;
+    cout << "-output_final_object_program" << endl;
+    ofstream final_object_program;
+    final_object_program.open("final_object_program.txt");
+    cout << "--output-H--" << endl;
+    object.output_H(source, final_object_program);
+    cout << "--output-T--" << endl;
+    object.output_T(source, final_object_program);
+    cout << "--output-E--" << endl;
+    object.output_E(source, final_object_program);
+    final_object_program.close();
 
     cout << "--fin--" << endl;
 }
