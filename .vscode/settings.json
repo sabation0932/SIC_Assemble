@@ -1,7 +1,10 @@
 {
     "files.associations": {
         "ostream": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "memory": "cpp",
+        "vector": "cpp",
+        "iosfwd": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
