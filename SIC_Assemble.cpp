@@ -328,7 +328,7 @@ public:
                 {
                     Loc.push_back(loc_counter(start_num, 3));
                 }
-                cout << i << " : " << format << endl;
+                // cout << i << " : " << format << endl;
             }
         }
     }
@@ -408,9 +408,9 @@ public:
             while (getline(source, line))
             {
 
-                cout << line << endl;
-                print_ascii(line);
-                cout << "------" << endl;
+                // cout << line << endl;
+                // print_ascii(line);
+                // cout << "------" << endl;
                 string temp_string = "";
                 int col_selector = 0;
                 for (int i = 0; i < line.size(); i++)
@@ -638,54 +638,75 @@ public:
         // cout << "get_BYTE " << temp << endl;
         return temp;
     }
+    bool is_no_obj(string _col_2_)
+    {
+        if (_col_2_ == "START")
+            return true;
+        else if (_col_2_ == "RESW")
+            return true;
+        else if (_col_2_ == "RESB")
+            return true;
+        else
+        {
+            return false;
+        }
+    }
+    bool is_no_relation_with_(string _col_2_, string _col_3_)
+    {
+        //直接對Loc動作
+        if (_col_2_ == "BYTE")
+        {
+            Loc.push_back(get_BYTE_word(_col_3_));
+
+            return true;
+        }
+        if (_col_2_ == "WORD") //遇到word補'0'
+        {
+            string result;
+            stringstream ss;
+            string num = dec_to_hex(atoi(_col_3_.c_str()));
+            ss << setw(object_max_num) << setfill('0') << num; //補0 補到object code的最多的位元數
+            ss >> result;
+            Loc.push_back(result);
+            return true;
+        }
+        return false;
+    }
     void generate(source_file &_source, opcode_file &_opcode) //生成object_code
     {
         for (size_t i = 0; i < _source.col_2.size(); i++)
         {
-            if (_source.col_2[i] == "START")
-                i++;
+            if (is_no_obj(_source.col_2[i])) //如果是不產生obj_code  天加“” ;
+            {
+                Obj_code.push_back("");
+                cout << i << "\t" << _source.col_2[i] << " | "
+                     << "no object code" << endl;
+                continue;
+            }
 
-            // cout<<_source.col_2[i]<<_source.col_3[i]<<endl;
+            if (is_no_relation_with_(_source.col_2[i], _source.col_3[i]))
+            {
+                //如果產生的obj_code 跟 opcode 沒有關係？
+                continue;
+            }
 
-            string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]); //輸入col_2 獲得 opcode
-            string temp_string_symbol_table = "";
-            string result = "";
+            //剩下都是要計算obj code
 
-            if (temp_string_opcode == "BYTE")
-            {
+            // cout << i << "\t" << _source.col_2[i] << " | " << _source.col_3[i] << endl;
 
-                temp_string_opcode = ""; //清空the address of給的訊息
-                result = get_BYTE_word(_source.col_3[i]);
-            }
-            else if (temp_string_opcode == "WORD") //遇到word補'0'
-            {
-                stringstream ss;
-                string num = dec_to_hex(atoi(_source.col_3[i].c_str()));
-                ss << setw(object_max_num) << setfill('0') << num; //補0 補到object code的最多的位元數
-                ss >> result;
-            }
-            else if (temp_string_opcode == "RESW") //沒有object code
-            {
-                result = "";
-            }
-            else if (temp_string_opcode == "RESB") //沒有object code
-            {
-                result = "";
-            }
-            else if (temp_string_opcode == "END") //沒有object code
-            {
-                temp_string_opcode = "";
-                temp_string_symbol_table = "";
-            }
-            else
-            {
-                temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]); // 輸入col_3 獲得 loc
-                result = temp_string_opcode + temp_string_symbol_table;
-            }
+            // string temp_string_opcode = _opcode.the_address_of(_source.col_2[i]); //輸入col_2 獲得 opcode
+            // string temp_string_symbol_table = "";
+            // string result = "";
+
+            // else //非特殊情況
+            // {
+            //     temp_string_symbol_table = _source.the_loc_of(_source.col_3[i]); // 輸入col_3 獲得 loc
+            //     result = temp_string_opcode + temp_string_symbol_table;
+            // }
             // cout << temp_string_opcode << "|" << temp_string_symbol_table << endl;
 
             // cout << i << " : " << result << endl;
-            Obj_code.push_back(result);
+            // Obj_code.push_back(result);
         }
     }
     void print_loc_source_object(source_file &_source, string output_path)
@@ -822,17 +843,20 @@ int main()
     cout << "--start--" << endl;
     source_file source;
     source.load_data();
-    source.print_source();
+    // source.print_source();
     source.loc_count_fetch(0, source.col_2.size());
     source.print_loc_and_source("");
     cout << "--symbol-table--" << endl;
     source.symbol_table();
-    source.print_symbol_table("");
+    // source.print_symbol_table("");
     cout << "--load-OPCode" << endl;
     opcode_file opcode;
     opcode.load_data();
-    opcode.print_all_col();
-    
+    // opcode.print_all_col();
+    cout << "--object--code--" << endl;
+
+    object_code XE_Obj;
+    XE_Obj.generate(source, opcode);
 
     cout << "--fin--" << endl;
 }
