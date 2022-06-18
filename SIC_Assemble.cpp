@@ -825,9 +825,14 @@ int main()
     source.print_source();
     source.loc_count_fetch(0, source.col_2.size());
     source.print_loc_and_source("");
-    cout << " --symbol-table--" << endl;
+    cout << "--symbol-table--" << endl;
     source.symbol_table();
     source.print_symbol_table("");
+    cout << "--load-OPCode" << endl;
+    opcode_file opcode;
+    opcode.load_data();
+    opcode.print_all_col();
+    
 
     cout << "--fin--" << endl;
 }
