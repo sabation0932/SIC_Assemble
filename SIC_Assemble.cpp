@@ -674,14 +674,12 @@ public:
             return true;
         else if (_col_2_ == "RESB")
             return true;
-        else if (_col_2_ == "RESB")
-            return true;
         else
         {
             return false;
         }
     }
-    bool is_no_relation_with_(string _col_2_, string _col_3_)
+    bool is_no_relation_with_(string _col_2_, string _col_3_, opcode_file &_opcode)
     {
         //直接對Loc動作
         if (_col_2_ == "BYTE")
@@ -702,6 +700,14 @@ public:
             cout << "\t opcode" << result << endl;
             return true;
         }
+        if (_col_2_ == "RSUB") // OPcode 補'0'
+        {
+            string RSUB = _opcode.the_address_of(_col_2_);
+            RSUB = add_lecture(RSUB, '0', object_max_num, "back");
+            Obj_code.push_back(RSUB);
+            return true;
+        }
+
         return false;
     }
     string obj_process(string _format_message, string _col_2, string _col_3)
@@ -720,6 +726,21 @@ public:
         {
             return "+#";
         }
+        if (_format_message == "Extended")
+        {
+            return "+";
+        }
+        if (_format_message == "Indirect")
+        {
+            return "@";
+        }
+        if (_format_message == "Indexed")
+        {
+            return ",";
+        }
+
+        cout << _format_message << " not catched " << _col_2 << "|" << _col_3 << endl;
+        // exit(0);
 
         return _format_message;
     }
@@ -733,12 +754,12 @@ public:
                 continue;
             }
 
-            if (is_no_relation_with_(_source.col_2[i], _source.col_3[i])) // BYTE , WORD
+            if (is_no_relation_with_(_source.col_2[i], _source.col_3[i], _opcode)) // BYTE , WORD
                 continue;
 
             string format = _source.format_classifier(i, _source.col_2[i], _source.col_3[i], "object");
-            // string here_obj_code = obj_process(format, _source.col_2[i], _source.col_3[i]);
-            Obj_code.push_back(format);
+            string here_obj_code = obj_process(format, _source.col_2[i], _source.col_3[i]);
+            Obj_code.push_back(here_obj_code);
 
             //剩下都是要計算obj code
 
