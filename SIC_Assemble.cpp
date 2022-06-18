@@ -391,7 +391,7 @@ public:
                 }
             }
         }
-        else if (_col_2.find(",") != std::string::npos)
+        else if (_col_3.find(",") != std::string::npos)
         {
             format_message = "Indexed";
         }
@@ -704,6 +704,25 @@ public:
         }
         return false;
     }
+    string obj_process(string _format_message, string _col_2, string _col_3)
+    {
+        string result = "";
+        if (_format_message == "normal")
+        {
+            /* code */
+            return "n";
+        }
+        if (_format_message == "Immediate")
+        {
+            return "#";
+        }
+        if (_format_message == "Extended+Immediate")
+        {
+            return "+#";
+        }
+
+        return _format_message;
+    }
     void generate(source_file &_source, opcode_file &_opcode) //生成object_code
     {
         for (size_t i = 0; i < _source.col_2.size(); i++)
@@ -718,6 +737,7 @@ public:
                 continue;
 
             string format = _source.format_classifier(i, _source.col_2[i], _source.col_3[i], "object");
+            // string here_obj_code = obj_process(format, _source.col_2[i], _source.col_3[i]);
             Obj_code.push_back(format);
 
             //剩下都是要計算obj code
