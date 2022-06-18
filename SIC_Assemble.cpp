@@ -257,11 +257,11 @@ public:
         return size;
     }
 
-    void loc_count_fetch()
+    void loc_count_fetch(int _begin, int _end)
     {
         static bool start_is_find = false;
         static string start_num;
-        for (size_t i = 0; i < col_1.size(); i++) //讀取整裡過後的 Source Statement
+        for (size_t i = _begin; i < _end; i++) //讀取整裡過後的 Source Statement
         {
             if (col_2[i] == "START")
             {
@@ -269,6 +269,7 @@ public:
                 start_num = col_3[i];
                 Loc.push_back(loc_counter(start_num, 0)); // START 那一行
                 Loc.push_back(loc_counter(start_num, 0)); // START  的後一行 範例是 FIRST
+                i++;
             }
 
             else if (col_2[i] == "BYTE") //找到BYTE
@@ -287,6 +288,7 @@ public:
             else if (col_2[i] == "BASE")
             {
                 Loc.push_back("");
+                loc_count_fetch(i - 1, i); //抓取去一道指令的長度
             }
 
             else if (col_2[i] == "RESW")
@@ -821,8 +823,11 @@ int main()
     source_file source;
     source.load_data();
     source.print_source();
-    source.loc_count_fetch();
+    source.loc_count_fetch(0, source.col_2.size());
     source.print_loc_and_source("");
+    cout << " --symbol-table--" << endl;
+    source.symbol_table();
+    source.print_symbol_table("");
 
     cout << "--fin--" << endl;
 }
